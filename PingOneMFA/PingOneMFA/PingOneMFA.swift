@@ -75,6 +75,155 @@ public class PingOneMFA {
         }
     }
 
+    /// Registers the device's APNS push token with the PingOne MFA service.
+    ///
+    /// Uses `.sandbox` token type in `DEBUG` builds and `.production` otherwise.
+    ///
+    /// - Parameter pushToken: The raw APNS device token `Data` received in
+    ///   `application(_:didRegisterForRemoteNotificationsWithDeviceToken:)`.
+    /// - Throws: `PingOneMFAError` if registration fails.
+    public nonisolated static func register(pushToken: Data) async throws {
+        #if DEBUG
+        let tokenType = PingOne.APNSDeviceTokenType.sandbox
+        #else
+        let tokenType = PingOne.APNSDeviceTokenType.production
+        #endif
+
+        return try await withCheckedThrowingContinuation { continuation in
+            PingOne.setDeviceToken(token: pushToken, type: tokenType) { errors in
+                if let errors = errors, !errors.isEmpty {
+                    let message = errors.map { $0.localizedDescription }.joined(separator: "; ")
+                    continuation.resume(throwing: PingOneMFAError("Device token registration failed: \(message)"))
+                } else {
+                    continuation.resume()
+                }
+            }
+        }
+    }
+
+    /// Pairs this device with a PingOne environment using the provided pairing key.
+    ///
+    /// - Parameter pairingKey: The pairing key string provided by the PingOne environment.
+    /// - Throws: `PingOneMFAError` if pairing fails.
+    public nonisolated static func pair(pairingKey: String) async throws {
+        return try await withCheckedThrowingContinuation { continuation in
+            PingOne.pair(pairingKey) { _, error in
+                if let error = error {
+                    continuation.resume(throwing: PingOneMFAError("Pairing failed: \(error.localizedDescription)"))
+                } else {
+                    continuation.resume()
+                }
+            }
+        }
+    }
+
+    /// Returns all registered MFA accounts for this device.
+    ///
+    /// - Returns: An array of `PingOneMfaAccount` values parsed from the upstream `deviceInfo` payload.
+    /// - Throws: `PingOneMFAError` if the underlying SDK call returns errors.
+    public nonisolated static func getAccounts() async throws -> [PingOneMfaAccount] {
+        return try await withCheckedThrowingContinuation { continuation in
+            PingOne.getInfo(completion: { deviceInfo, errors in
+                if let errors = errors, !errors.isEmpty {
+                    let message = errors.map { $0.localizedDescription }.joined(separator: "; ")
+                    continuation.resume(throwing: PingOneMFAError("Get accounts failed: \(message)"))
+                } else {
+                    continuation.resume(returning: AccountParser.parse(deviceInfo))
+                }
+            })
+        }
+    }
+
+    /// Returns the current one-time passcode and its remaining validity window.
+    ///
+    /// `secondsRemaining` is computed as `Int(validUntil - now)` where `validUntil`
+    /// is the epoch-seconds timestamp returned by the upstream SDK.
+    ///
+    /// - Returns: An `OtpCodeInfo` containing the current passcode and seconds remaining.
+    /// - Throws: `PingOneMFAError` if the SDK call fails or returns no passcode info.
+    public nonisolated static func collectOtp() async throws -> OtpCodeInfo {
+        return try await withCheckedThrowingContinuation { continuation in
+            PingOne.getOneTimePasscode { passcodeInfo, error in
+                if let error = error {
+                    continuation.resume(throwing: PingOneMFAError("Collect OTP failed: \(error.localizedDescription)"))
+                } else if let passcodeInfo = passcodeInfo {
+                    let now = Date().timeIntervalSince1970
+                    let secondsRemaining = Int(passcodeInfo.validUntil - now)
+                    continuation.resume(returning: OtpCodeInfo(
+                        code: passcodeInfo.passcode,
+                        secondsRemaining: secondsRemaining
+                    ))
+                } else {
+                    continuation.resume(throwing: PingOneMFAError("Collect OTP returned no passcode info"))
+                }
+            }
+        }
+    }
+
+    /// Processes an incoming APNS push notification for MFA authentication.
+    ///
+    /// Extracts the `title` and `message` from `userInfo["aps"]["alert"]` (handling
+    /// both the string-alert and dict-alert forms of the APNS payload).
+    ///
+    /// - Parameter userInfo: The raw `userInfo` dictionary from
+    ///   `application(_:didReceiveRemoteNotification:fetchCompletionHandler:)`.
+    /// - Returns: A `PushNotification` holding the upstream `NotificationObject` plus
+    ///   the parsed title and message.
+    /// - Throws: `PingOneMFAError` if the SDK call fails or returns no notification object.
+    public nonisolated static func collectPush(userInfo: [AnyHashable: Any]) async throws -> PushNotification {
+        let title: String?
+        let message: String?
+        if let aps = userInfo["aps"] as? [String: Any] {
+            if let alert = aps["alert"] as? [String: Any] {
+                title = alert["title"] as? String
+                message = alert["body"] as? String
+            } else if let alertString = aps["alert"] as? String {
+                title = nil
+                message = alertString
+            } else {
+                title = nil
+                message = nil
+            }
+        } else {
+            title = nil
+            message = nil
+        }
+
+        return try await withCheckedThrowingContinuation { continuation in
+            PingOne.processRemoteNotification(userInfo) { notificationObject, error in
+                if let error = error {
+                    continuation.resume(throwing: PingOneMFAError("Collect push failed: \(error.localizedDescription)"))
+                } else if let notificationObject = notificationObject {
+                    continuation.resume(returning: PushNotification(
+                        notificationObject: notificationObject,
+                        title: title,
+                        message: message
+                    ))
+                } else {
+                    continuation.resume(throwing: PingOneMFAError("Collect push returned no notification object"))
+                }
+            }
+        }
+    }
+
+    /// Generates a mobile payload for use in PingOne authentication flows.
+    ///
+    /// - Returns: The mobile payload string.
+    /// - Throws: `PingOneMFAError` if payload generation fails or returns no payload.
+    public nonisolated static func collectMobilePayload() async throws -> String {
+        return try await withCheckedThrowingContinuation { continuation in
+            PingOne.generateMobilePayload(completionHandler: { payload, error in
+                if let error = error {
+                    continuation.resume(throwing: PingOneMFAError("Collect mobile payload failed: \(error.localizedDescription)"))
+                } else if let payload = payload {
+                    continuation.resume(returning: payload)
+                } else {
+                    continuation.resume(throwing: PingOneMFAError("Collect mobile payload returned no payload"))
+                }
+            })
+        }
+    }
+
     /// Resets the SDK to uninitialized state (useful for testing)
     internal static func reset() {
         isInitialized = false
