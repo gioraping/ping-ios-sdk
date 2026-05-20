@@ -14,6 +14,7 @@ class MockPingOneMFA {
     nonisolated(unsafe) static var shouldThrowError = false
     nonisolated(unsafe) static var errorMessage = "Operation failed"
     nonisolated(unsafe) static var initializeCalled = false
+    nonisolated(unsafe) static var initializeCallCount = 0
     nonisolated(unsafe) static var registerCalled = false
     nonisolated(unsafe) static var pairCalled = false
     nonisolated(unsafe) static var getAccountsCalled = false
@@ -27,11 +28,16 @@ class MockPingOneMFA {
     nonisolated(unsafe) static var accountsReturnValue: [PingOneMfaAccount] = []
     nonisolated(unsafe) static var otpReturnValue = OtpCodeInfo(code: "123456", secondsRemaining: 30)
     nonisolated(unsafe) static var mobilePayloadReturnValue = "mockMobilePayload"
+    // collectPush cannot return a real PushNotification in tests because NotificationObject
+    // (from PingOneSDK) has no accessible initializer. The mock therefore only supports
+    // the error-path for collectPush.
+    nonisolated(unsafe) static var collectPushReturnValue: PushNotification? = nil
 
     static func reset() {
         shouldThrowError = false
         errorMessage = "Operation failed"
         initializeCalled = false
+        initializeCallCount = 0
         registerCalled = false
         pairCalled = false
         getAccountsCalled = false
@@ -43,6 +49,7 @@ class MockPingOneMFA {
         accountsReturnValue = []
         otpReturnValue = OtpCodeInfo(code: "123456", secondsRemaining: 30)
         mobilePayloadReturnValue = "mockMobilePayload"
+        collectPushReturnValue = nil
     }
 
     @PingOneMFAActor
@@ -55,29 +62,30 @@ class MockPingOneMFA {
 
     static func initialize() async throws {
         initializeCalled = true
+        initializeCallCount += 1
         if shouldThrowError {
-            throw TestMFAError.initFailed(errorMessage)
+            throw PingOneMFAError(errorMessage)
         }
     }
 
     static func register(pushToken: Data) async throws {
         registerCalled = true
         if shouldThrowError {
-            throw TestMFAError.operationFailed(errorMessage)
+            throw PingOneMFAError(errorMessage)
         }
     }
 
     static func pair(pairingKey: String) async throws {
         pairCalled = true
         if shouldThrowError {
-            throw TestMFAError.operationFailed(errorMessage)
+            throw PingOneMFAError(errorMessage)
         }
     }
 
     static func getAccounts() async throws -> [PingOneMfaAccount] {
         getAccountsCalled = true
         if shouldThrowError {
-            throw TestMFAError.operationFailed(errorMessage)
+            throw PingOneMFAError(errorMessage)
         }
         return accountsReturnValue
     }
@@ -85,31 +93,29 @@ class MockPingOneMFA {
     static func collectOtp() async throws -> OtpCodeInfo {
         collectOtpCalled = true
         if shouldThrowError {
-            throw TestMFAError.operationFailed(errorMessage)
+            throw PingOneMFAError(errorMessage)
         }
         return otpReturnValue
+    }
+
+    static func collectPush(userInfo: [AnyHashable: Any]) async throws -> PushNotification {
+        collectPushCalled = true
+        if shouldThrowError {
+            throw PingOneMFAError(errorMessage)
+        }
+        // NotificationObject (from PingOneSDK) cannot be instantiated in tests;
+        // unwrap the pre-configured return value or throw if not configured.
+        guard let value = collectPushReturnValue else {
+            throw PingOneMFAError("collectPush: no return value configured")
+        }
+        return value
     }
 
     static func collectMobilePayload() async throws -> String {
         collectMobilePayloadCalled = true
         if shouldThrowError {
-            throw TestMFAError.operationFailed(errorMessage)
+            throw PingOneMFAError(errorMessage)
         }
         return mobilePayloadReturnValue
-    }
-}
-
-
-enum TestMFAError: LocalizedError {
-    case initFailed(String)
-    case operationFailed(String)
-
-    var errorDescription: String? {
-        switch self {
-        case .initFailed(let message):
-            return message
-        case .operationFailed(let message):
-            return message
-        }
     }
 }

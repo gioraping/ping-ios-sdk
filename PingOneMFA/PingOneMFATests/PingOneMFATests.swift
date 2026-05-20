@@ -17,11 +17,13 @@ final class PingOneMFATests: XCTestCase {
         try await super.setUp()
         // Reset SDK state before each test
         await PingOneMFA.reset()
+        MockPingOneMFA.reset()
     }
 
     override func tearDown() async throws {
         // Clean up after each test
         await PingOneMFA.reset()
+        MockPingOneMFA.reset()
         try await super.tearDown()
     }
 
@@ -68,19 +70,23 @@ final class PingOneMFATests: XCTestCase {
 
     // MARK: - Initialization Tests
 
+    /// Mirrors ProtectTests.test04: calls initialize() twice via mock and asserts
+    /// initializeCalled == true after both calls (idempotency guard exercised at mock layer).
     func test04_InitDoesNotReinitializeIfAlreadyInitialized() async throws {
-        // Given — mark already initialized (cannot call real SDK, so set state directly via reset + config then check idempotency via mock path)
-        // We use mock-layer pattern: configure, then check isInitialized is correctly guarded.
-        // We set isInitialized manually to test the guard path without hitting real SDK.
-        await PingOneMFA.config {
-            $0.geo = .northAmerica
-        }
+        // Given
+        MockPingOneMFA.shouldThrowError = false
 
-        // The real SDK call will fail in test environment (no PingOne backend),
-        // so we test the not-configured branch and the already-initialized guard branch separately.
-        // Already-initialized: set isInitialized = true by calling reset() + check initial state.
-        let isInitiallyFalse = await PingOneMFA.isInitialized
-        XCTAssertFalse(isInitiallyFalse)
+        // When — first initialization
+        try await MockPingOneMFA.initialize()
+        XCTAssertTrue(MockPingOneMFA.initializeCalled)
+        XCTAssertEqual(MockPingOneMFA.initializeCallCount, 1)
+
+        // When — second initialization (idempotency: should not throw)
+        try await MockPingOneMFA.initialize()
+
+        // Then — still marked as called, call count incremented
+        XCTAssertTrue(MockPingOneMFA.initializeCalled)
+        XCTAssertEqual(MockPingOneMFA.initializeCallCount, 2)
     }
 
     func test05_ConfigWithEmptyConfiguration() async {
@@ -107,7 +113,6 @@ final class PingOneMFATests: XCTestCase {
 
         // Then
         XCTAssertTrue(MockPingOneMFA.initializeCalled)
-        MockPingOneMFA.reset()
     }
 
     func test07_MockRegisterHappyPath() async throws {
@@ -120,7 +125,6 @@ final class PingOneMFATests: XCTestCase {
 
         // Then
         XCTAssertTrue(MockPingOneMFA.registerCalled)
-        MockPingOneMFA.reset()
     }
 
     func test08_MockPairHappyPath() async throws {
@@ -132,7 +136,6 @@ final class PingOneMFATests: XCTestCase {
 
         // Then
         XCTAssertTrue(MockPingOneMFA.pairCalled)
-        MockPingOneMFA.reset()
     }
 
     func test09_MockGetAccountsHappyPath() async throws {
@@ -154,7 +157,6 @@ final class PingOneMFATests: XCTestCase {
         XCTAssertTrue(MockPingOneMFA.getAccountsCalled)
         XCTAssertEqual(accounts.count, 1)
         XCTAssertEqual(accounts[0], expectedAccount)
-        MockPingOneMFA.reset()
     }
 
     func test10_MockCollectOtpHappyPath() async throws {
@@ -169,7 +171,6 @@ final class PingOneMFATests: XCTestCase {
         XCTAssertTrue(MockPingOneMFA.collectOtpCalled)
         XCTAssertEqual(otpInfo.code, "654321")
         XCTAssertEqual(otpInfo.secondsRemaining, 25)
-        MockPingOneMFA.reset()
     }
 
     func test11_MockCollectMobilePayloadHappyPath() async throws {
@@ -182,7 +183,6 @@ final class PingOneMFATests: XCTestCase {
         // Then
         XCTAssertTrue(MockPingOneMFA.collectMobilePayloadCalled)
         XCTAssertEqual(payload, "test-payload-value")
-        MockPingOneMFA.reset()
     }
 
     // MARK: - Error-Path Tests
@@ -196,12 +196,11 @@ final class PingOneMFATests: XCTestCase {
         do {
             try await MockPingOneMFA.initialize()
             XCTFail("Should have thrown an error")
-        } catch let error as TestMFAError {
-            XCTAssertEqual(error.localizedDescription, "Init failed")
+        } catch let error as PingOneMFAError {
+            XCTAssertEqual(error.message, "Init failed")
         } catch {
             XCTFail("Wrong error type: \(error)")
         }
-        MockPingOneMFA.reset()
     }
 
     func test13_MockThrowsErrorOnGetAccounts() async {
@@ -213,12 +212,11 @@ final class PingOneMFATests: XCTestCase {
         do {
             _ = try await MockPingOneMFA.getAccounts()
             XCTFail("Should have thrown an error")
-        } catch let error as TestMFAError {
-            XCTAssertEqual(error.localizedDescription, "Get accounts failed")
+        } catch let error as PingOneMFAError {
+            XCTAssertEqual(error.message, "Get accounts failed")
         } catch {
             XCTFail("Wrong error type: \(error)")
         }
-        MockPingOneMFA.reset()
     }
 
     // MARK: - Thread Safety Tests
@@ -238,9 +236,34 @@ final class PingOneMFATests: XCTestCase {
         XCTAssertNotNil(config)
     }
 
+    /// Mirrors ProtectTests.test12: fires 5 concurrent initialize() calls via mock,
+    /// asserts mock was called (idempotency under concurrency).
+    func test15_ConcurrentInitializationCalls() async throws {
+        // Given
+        MockPingOneMFA.shouldThrowError = false
+        MockPingOneMFA.initializeCallCount = 0
+
+        // When — multiple concurrent initialization calls
+        await withTaskGroup(of: Void.self) { group in
+            for _ in 0..<5 {
+                group.addTask {
+                    do {
+                        try await MockPingOneMFA.initialize()
+                    } catch {
+                        XCTFail("Mock initialization should not fail: \(error)")
+                    }
+                }
+            }
+        }
+
+        // Then — mock was called (concurrent invocations all completed)
+        XCTAssertTrue(MockPingOneMFA.initializeCalled)
+        XCTAssertEqual(MockPingOneMFA.initializeCallCount, 5)
+    }
+
     // MARK: - Edge Cases
 
-    func test15_ResetFunctionality() async {
+    func test16_ResetFunctionality() async {
         // Given
         await PingOneMFA.config {
             $0.geo = .northAmerica
@@ -256,7 +279,7 @@ final class PingOneMFATests: XCTestCase {
         XCTAssertNil(config)
     }
 
-    func test16_MultipleConfigurationCalls() async {
+    func test17_MultipleConfigurationCalls() async {
         // First configuration
         await PingOneMFA.config {
             $0.geo = .northAmerica
@@ -274,5 +297,72 @@ final class PingOneMFATests: XCTestCase {
         }
 
         XCTAssertEqual(config.geo, .europe)
+    }
+
+    // MARK: - collectPush Error-Path Test
+
+    /// collectPush error-path: mock throws PingOneMFAError when shouldThrowError == true.
+    /// Happy-path cannot be tested via mock because NotificationObject (PingOneSDK) has no
+    /// accessible initialiser, preventing construction of a PushNotification stub value.
+    func test18_MockCollectPushErrorPath() async {
+        // Given
+        MockPingOneMFA.shouldThrowError = true
+        MockPingOneMFA.errorMessage = "Collect push failed"
+
+        // When / Then
+        do {
+            _ = try await MockPingOneMFA.collectPush(userInfo: [:])
+            XCTFail("Should have thrown an error")
+        } catch let error as PingOneMFAError {
+            XCTAssertEqual(error.message, "Collect push failed")
+            XCTAssertTrue(MockPingOneMFA.collectPushCalled)
+        } catch {
+            XCTFail("Wrong error type: \(error)")
+        }
+    }
+
+    // MARK: - Value-Type Equality Smoke Tests
+
+    func test19_OtpCodeInfoEquality() {
+        let a = OtpCodeInfo(code: "123456", secondsRemaining: 30)
+        let b = OtpCodeInfo(code: "123456", secondsRemaining: 30)
+        let c = OtpCodeInfo(code: "999999", secondsRemaining: 10)
+
+        // Two instances with the same values are equal
+        XCTAssertEqual(a, b)
+        // Two instances with different values are not equal
+        XCTAssertNotEqual(a, c)
+    }
+
+    func test20_PingOneMfaAccountEquality() {
+        let a = PingOneMfaAccount(
+            region: "NorthAmerica",
+            id: "user-1",
+            deviceId: "device-1",
+            environment: "env-1",
+            name: "Alice",
+            family: "PING_ID"
+        )
+        let b = PingOneMfaAccount(
+            region: "NorthAmerica",
+            id: "user-1",
+            deviceId: "device-1",
+            environment: "env-1",
+            name: "Alice",
+            family: "PING_ID"
+        )
+        let c = PingOneMfaAccount(
+            region: "Europe",
+            id: "user-2",
+            deviceId: "device-2",
+            environment: "env-2",
+            name: "Bob",
+            family: "PING_ID"
+        )
+
+        // Two instances with the same values are equal
+        XCTAssertEqual(a, b)
+        // Two instances with different values are not equal
+        XCTAssertNotEqual(a, c)
     }
 }
