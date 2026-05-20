@@ -32,17 +32,39 @@ public struct PushNotification: @unchecked Sendable {
     /// Approves the push notification authentication request.
     ///
     /// - Parameters:
-    ///   - authMethod: The authentication method to use for approval.
-    ///   - numberChallenge: The number matching challenge value, if applicable.
-    /// - Throws: `PingOneMFAError` if approval fails.
+    ///   - authMethod: The authentication method to use for approval (maps to
+    ///     `withAuthenticationMethod` on the upstream `NotificationObject`).
+    ///   - numberChallenge: The number matching challenge value, if applicable (maps to
+    ///     `numberMatchingPickedValue` on the upstream `NotificationObject`).
+    /// - Throws: `PingOneMFAError` if approval fails or the upstream SDK reports an error.
     public func approve(authMethod: String?, numberChallenge: Int?) async throws {
-        throw PingOneMFAError("not implemented")
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            let numberMatchingPickedValue: NSNumber? = numberChallenge.map { NSNumber(value: $0) }
+            notificationObject.approve(
+                withAuthenticationMethod: authMethod,
+                numberMatchingPickedValue: numberMatchingPickedValue
+            ) { _, error in
+                if let error = error {
+                    continuation.resume(throwing: PingOneMFAError("approve failed: \(error.localizedDescription)"))
+                } else {
+                    continuation.resume(returning: ())
+                }
+            }
+        }
     }
 
     /// Denies the push notification authentication request.
     ///
     /// - Throws: `PingOneMFAError` if denial fails.
     public func deny() async throws {
-        throw PingOneMFAError("not implemented")
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            notificationObject.deny(reason: .none) { error in
+                if let error = error {
+                    continuation.resume(throwing: PingOneMFAError("deny failed: \(error.localizedDescription)"))
+                } else {
+                    continuation.resume(returning: ())
+                }
+            }
+        }
     }
 }
