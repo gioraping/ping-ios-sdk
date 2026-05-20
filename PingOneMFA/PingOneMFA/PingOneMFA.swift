@@ -9,4 +9,8 @@
 
 import Foundation
 
-// Placeholder. Real implementation lands in subsequent tasks.
+/// Actor to manage PingOneMFA SDK state with thread safety
+@globalActor
+public actor PingOneMFAActor {
+    public static let shared = PingOneMFAActor()
+}
