@@ -18,6 +18,11 @@
 		99987F5A040F43A49A5DF553 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 27D20303A69B4012AE4848A0 /* PrivacyInfo.xcprivacy */; };
 		4D5B9C4E91C548879F3D0092 /* PingOneMFA.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FDE1452E7C56416FA24BE3FC /* PingOneMFA.framework */; };
 		9CA840E7F2434ED28DFB38DD /* PingOneSDK in Frameworks */ = {isa = PBXBuildFile; productRef = AF2DE0899F084DD0B7D178F2 /* PingOneSDK */; };
+		240C95657B48433E8CD75019 /* MockPingOneMFA.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C30C6DF01DC455797CC25F3 /* MockPingOneMFA.swift */; };
+		CBF3C2244A354D3EB152BF1A /* PingOneMFATests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4A849F04B2246F998FAF85F /* PingOneMFATests.swift */; };
+		E590B194E3424CBDBCFA4E5D /* PingOneMFAConfigTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 267A4DF676FE499CAFC131CF /* PingOneMFAConfigTests.swift */; };
+		A478018F2630425393CEE9B1 /* PingOneMFAErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ED305AC71AB43B0876EB3AF /* PingOneMFAErrorTests.swift */; };
+		96FC692C7D39460B8F4F46B9 /* AccountParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED414CD63DEB40468AD3DBFD /* AccountParserTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -42,6 +47,11 @@
 		838D8BFF67D246BD98BAE0D6 /* PushNotification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushNotification.swift; sourceTree = "<group>"; };
 		8E0FA1C73976462994E83668 /* PingOneMFA.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PingOneMFA.h; sourceTree = "<group>"; };
 		27D20303A69B4012AE4848A0 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		8C30C6DF01DC455797CC25F3 /* MockPingOneMFA.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockPingOneMFA.swift; sourceTree = "<group>"; };
+		D4A849F04B2246F998FAF85F /* PingOneMFATests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PingOneMFATests.swift; sourceTree = "<group>"; };
+		267A4DF676FE499CAFC131CF /* PingOneMFAConfigTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PingOneMFAConfigTests.swift; sourceTree = "<group>"; };
+		4ED305AC71AB43B0876EB3AF /* PingOneMFAErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PingOneMFAErrorTests.swift; sourceTree = "<group>"; };
+		ED414CD63DEB40468AD3DBFD /* AccountParserTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountParserTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -101,6 +111,11 @@
 		4DAC2ED9E36440E8BB727098 /* PingOneMFATests */ = {
 			isa = PBXGroup;
 			children = (
+				8C30C6DF01DC455797CC25F3 /* MockPingOneMFA.swift */,
+				D4A849F04B2246F998FAF85F /* PingOneMFATests.swift */,
+				267A4DF676FE499CAFC131CF /* PingOneMFAConfigTests.swift */,
+				4ED305AC71AB43B0876EB3AF /* PingOneMFAErrorTests.swift */,
+				ED414CD63DEB40468AD3DBFD /* AccountParserTests.swift */,
 			);
 			path = PingOneMFATests;
 			sourceTree = "<group>";
@@ -239,6 +254,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				240C95657B48433E8CD75019 /* MockPingOneMFA.swift in Sources */,
+				CBF3C2244A354D3EB152BF1A /* PingOneMFATests.swift in Sources */,
+				E590B194E3424CBDBCFA4E5D /* PingOneMFAConfigTests.swift in Sources */,
+				A478018F2630425393CEE9B1 /* PingOneMFAErrorTests.swift in Sources */,
+				96FC692C7D39460B8F4F46B9 /* AccountParserTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
