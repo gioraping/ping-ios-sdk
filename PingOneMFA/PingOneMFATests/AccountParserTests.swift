@@ -19,21 +19,21 @@ final class AccountParserTests: XCTestCase {
     // MARK: - Well-formed payload tests
 
     func testParseSingleRegionSingleUser() {
-        // Given
+        // Given — real payload shape from PingOne.getInfo
         let deviceInfo: [String: Any] = [
-            "regions": [
-                [
-                    "region": "NorthAmerica",
-                    "users": [
-                        [
-                            "id": "user-id-1",
-                            "deviceId": "device-id-1",
-                            "environment": "env-id-1",
-                            "name": "Test User",
-                            "family": "PING_ID"
-                        ]
+            "NorthAmerica": [
+                "users": [
+                    [
+                        "id": "c845dcd4-9696-45ce-b1b8-8797da941538",
+                        "device": ["id": "05280532-42b0-4d29-93f2-9f2ed7acefc1"],
+                        "environment": ["id": "803ca4d4-cd92-4cb8-9dd1-6fe68de0a5f0"]
                     ]
-                ]
+                ],
+                "deviceRequirementsEvaluation": [
+                    "status": "PASSED",
+                    "deviceRequirementsDataHash": "wz8xty+2gFcfepr5zPpg/7TJENBtxZQhRSVw3pVidiU="
+                ],
+                "shouldRollback": 0
             ]
         ]
 
@@ -43,46 +43,34 @@ final class AccountParserTests: XCTestCase {
         // Then
         XCTAssertEqual(accounts.count, 1)
         XCTAssertEqual(accounts[0].region, "NorthAmerica")
-        XCTAssertEqual(accounts[0].id, "user-id-1")
-        XCTAssertEqual(accounts[0].deviceId, "device-id-1")
-        XCTAssertEqual(accounts[0].environment, "env-id-1")
-        XCTAssertEqual(accounts[0].name, "Test User")
-        XCTAssertEqual(accounts[0].family, "PING_ID")
+        XCTAssertEqual(accounts[0].id, "c845dcd4-9696-45ce-b1b8-8797da941538")
+        XCTAssertEqual(accounts[0].deviceId, "05280532-42b0-4d29-93f2-9f2ed7acefc1")
+        XCTAssertEqual(accounts[0].environmentId, "803ca4d4-cd92-4cb8-9dd1-6fe68de0a5f0")
     }
 
     func testParseMultipleRegionsMultipleUsers() {
         // Given
         let deviceInfo: [String: Any] = [
-            "regions": [
-                [
-                    "region": "NorthAmerica",
-                    "users": [
-                        [
-                            "id": "user-na-1",
-                            "deviceId": "device-na-1",
-                            "environment": "env-na-1",
-                            "name": "NA User 1",
-                            "family": "PING_ID"
-                        ],
-                        [
-                            "id": "user-na-2",
-                            "deviceId": "device-na-2",
-                            "environment": "env-na-2",
-                            "name": "NA User 2",
-                            "family": "PING_ID"
-                        ]
+            "NorthAmerica": [
+                "users": [
+                    [
+                        "id": "user-na-1",
+                        "device": ["id": "device-na-1"],
+                        "environment": ["id": "env-na-1"]
+                    ],
+                    [
+                        "id": "user-na-2",
+                        "device": ["id": "device-na-2"],
+                        "environment": ["id": "env-na-2"]
                     ]
-                ],
-                [
-                    "region": "Europe",
-                    "users": [
-                        [
-                            "id": "user-eu-1",
-                            "deviceId": "device-eu-1",
-                            "environment": "env-eu-1",
-                            "name": "EU User 1",
-                            "family": "PING_ID"
-                        ]
+                ]
+            ],
+            "Europe": [
+                "users": [
+                    [
+                        "id": "user-eu-1",
+                        "device": ["id": "device-eu-1"],
+                        "environment": ["id": "env-eu-1"]
                     ]
                 ]
             ]
@@ -105,11 +93,8 @@ final class AccountParserTests: XCTestCase {
     func testParseRegionWithEmptyUsersArray() {
         // Given — region exists but users array is empty
         let deviceInfo: [String: Any] = [
-            "regions": [
-                [
-                    "region": "Australia",
-                    "users": []
-                ]
+            "Australia": [
+                "users": [[String: Any]]()
             ]
         ]
 
@@ -118,6 +103,30 @@ final class AccountParserTests: XCTestCase {
 
         // Then
         XCTAssertEqual(accounts.count, 0)
+    }
+
+    func testParseRegionWithExtraKeysIgnored() {
+        // Given — non-"users" keys such as deviceRequirementsEvaluation and shouldRollback are ignored
+        let deviceInfo: [String: Any] = [
+            "NorthAmerica": [
+                "users": [
+                    [
+                        "id": "user-1",
+                        "device": ["id": "device-1"],
+                        "environment": ["id": "env-1"]
+                    ]
+                ],
+                "deviceRequirementsEvaluation": ["status": "PASSED"],
+                "shouldRollback": 0
+            ]
+        ]
+
+        // When
+        let accounts = AccountParser.parse(deviceInfo)
+
+        // Then — extra keys do not affect parsing
+        XCTAssertEqual(accounts.count, 1)
+        XCTAssertEqual(accounts[0].id, "user-1")
     }
 
     // MARK: - Edge cases
@@ -138,40 +147,24 @@ final class AccountParserTests: XCTestCase {
         XCTAssertEqual(accounts.count, 0)
     }
 
-    func testParseMissingRegionsKey() {
-        // Given — no "regions" key
+    func testParseRegionValueNotADictionary() {
+        // Given — region value is a String instead of [String: Any]
         let deviceInfo: [String: Any] = [
-            "something": "else"
+            "NorthAmerica": "not-a-dict"
         ]
 
         // When
         let accounts = AccountParser.parse(deviceInfo)
 
-        // Then
-        XCTAssertEqual(accounts.count, 0)
-    }
-
-    func testParseRegionsNotAnArray() {
-        // Given — "regions" is a String instead of [[String: Any]]
-        let deviceInfo: [String: Any] = [
-            "regions": "not-an-array"
-        ]
-
-        // When
-        let accounts = AccountParser.parse(deviceInfo)
-
-        // Then
+        // Then — silently skipped
         XCTAssertEqual(accounts.count, 0)
     }
 
     func testParseMissingUsersKeyInRegion() {
         // Given — region dict has no "users" key
         let deviceInfo: [String: Any] = [
-            "regions": [
-                [
-                    "region": "NorthAmerica"
-                    // "users" key missing
-                ]
+            "NorthAmerica": [
+                "deviceRequirementsEvaluation": ["status": "PASSED"]
             ]
         ]
 
@@ -183,19 +176,14 @@ final class AccountParserTests: XCTestCase {
     }
 
     func testParseMissingRequiredUserFields() {
-        // Given — user dict is missing the "id" field
+        // Given — user dict is missing the "device" field
         let deviceInfo: [String: Any] = [
-            "regions": [
-                [
-                    "region": "NorthAmerica",
-                    "users": [
-                        [
-                            // "id" missing
-                            "deviceId": "device-id-1",
-                            "environment": "env-id-1",
-                            "name": "Test User",
-                            "family": "PING_ID"
-                        ]
+            "NorthAmerica": [
+                "users": [
+                    [
+                        "id": "user-1",
+                        // "device" missing
+                        "environment": ["id": "env-1"]
                     ]
                 ]
             ]
@@ -204,31 +192,45 @@ final class AccountParserTests: XCTestCase {
         // When
         let accounts = AccountParser.parse(deviceInfo)
 
-        // Then — user with missing id is silently skipped
+        // Then — user with missing device is silently skipped
+        XCTAssertEqual(accounts.count, 0)
+    }
+
+    func testParseMissingEnvironmentId() {
+        // Given — environment dict exists but has no "id" key
+        let deviceInfo: [String: Any] = [
+            "NorthAmerica": [
+                "users": [
+                    [
+                        "id": "user-1",
+                        "device": ["id": "device-1"],
+                        "environment": ["wrongKey": "value"]
+                    ]
+                ]
+            ]
+        ]
+
+        // When
+        let accounts = AccountParser.parse(deviceInfo)
+
+        // Then — silently skipped
         XCTAssertEqual(accounts.count, 0)
     }
 
     func testParseMixedValidAndInvalidUsers() {
-        // Given — one valid user, one missing required field
+        // Given — one valid user, one missing required device field
         let deviceInfo: [String: Any] = [
-            "regions": [
-                [
-                    "region": "NorthAmerica",
-                    "users": [
-                        [
-                            "id": "valid-user",
-                            "deviceId": "valid-device",
-                            "environment": "valid-env",
-                            "name": "Valid User",
-                            "family": "PING_ID"
-                        ],
-                        [
-                            // "name" missing
-                            "id": "invalid-user",
-                            "deviceId": "invalid-device",
-                            "environment": "invalid-env",
-                            "family": "PING_ID"
-                        ]
+            "NorthAmerica": [
+                "users": [
+                    [
+                        "id": "valid-user",
+                        "device": ["id": "valid-device"],
+                        "environment": ["id": "valid-env"]
+                    ],
+                    [
+                        "id": "invalid-user",
+                        // "device" missing
+                        "environment": ["id": "invalid-env"]
                     ]
                 ]
             ]
@@ -240,45 +242,5 @@ final class AccountParserTests: XCTestCase {
         // Then — only the valid user is returned
         XCTAssertEqual(accounts.count, 1)
         XCTAssertEqual(accounts[0].id, "valid-user")
-    }
-
-    func testParseRegionNameDefaultsToEmptyStringWhenMissing() {
-        // Given — region dict has no "region" key
-        let deviceInfo: [String: Any] = [
-            "regions": [
-                [
-                    // "region" key missing — defaults to ""
-                    "users": [
-                        [
-                            "id": "user-id-1",
-                            "deviceId": "device-id-1",
-                            "environment": "env-id-1",
-                            "name": "Test User",
-                            "family": "PING_ID"
-                        ]
-                    ]
-                ]
-            ]
-        ]
-
-        // When
-        let accounts = AccountParser.parse(deviceInfo)
-
-        // Then — user is returned but region defaults to empty string
-        XCTAssertEqual(accounts.count, 1)
-        XCTAssertEqual(accounts[0].region, "")
-    }
-
-    func testParseEmptyRegionsArray() {
-        // Given — "regions" is an empty array
-        let deviceInfo: [String: Any] = [
-            "regions": [[String: Any]]()
-        ]
-
-        // When
-        let accounts = AccountParser.parse(deviceInfo)
-
-        // Then
-        XCTAssertEqual(accounts.count, 0)
     }
 }

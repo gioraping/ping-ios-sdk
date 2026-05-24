@@ -111,7 +111,7 @@ struct PingOneMFAAccountsView: View {
 // MARK: - Account Card View
 
 /// Inline card row for a single PingOneMfaAccount.
-/// Displays the account name (primary label) and environment (secondary label).
+/// Displays the user ID (primary label), environment ID, and region.
 private struct PingOneMFAAccountCardView: View {
     let account: PingOneMfaAccount
 
@@ -132,12 +132,20 @@ private struct PingOneMFAAccountCardView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 10))
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(account.name)
-                        .font(.system(size: 16, weight: .semibold))
+                    Text(account.id)
+                        .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.primary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
 
-                    Text(account.environment)
-                        .font(.system(size: 13))
+                    Text("Env: \(account.environmentId)")
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+
+                    Text(account.region)
+                        .font(.system(size: 11))
                         .foregroundColor(.secondary)
                 }
 

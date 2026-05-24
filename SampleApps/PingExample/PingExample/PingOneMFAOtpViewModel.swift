@@ -27,11 +27,6 @@ class PingOneMFAOtpViewModel: ObservableObject {
     // 1-Hz timer that decrements `countdown` for live display.
     private var countdownTimer: Timer?
 
-    deinit {
-        refreshTask?.cancel()
-        countdownTimer?.invalidate()
-    }
-
     /// Loads the current OTP from the SDK and schedules auto-refresh.
     /// Lazily initializes the PingOne MFA SDK if it has not been initialized yet.
     func loadOtp() async {

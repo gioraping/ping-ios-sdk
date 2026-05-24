@@ -14,25 +14,23 @@ import Foundation
 /// into a flat array of `PingOneMfaAccount` values.
 ///
 /// The upstream payload has the shape:
-/// ```json
+/// ```
 /// {
-///   "regions": [
-///     {
-///       "region": "NorthAmerica",
-///       "users": [
-///         {
-///           "id": "...",
-///           "deviceId": "...",
-///           "environment": "...",
-///           "name": "...",
-///           "family": "..."
-///         }
-///       ]
-///     }
-///   ]
+///   "NorthAmerica": {
+///     "users": [
+///       {
+///         "id": "c845dcd4-...",
+///         "device":      { "id": "05280532-..." },
+///         "environment": { "id": "803ca4d4-..." }
+///       }
+///     ],
+///     "deviceRequirementsEvaluation": { "status": "PASSED", ... },
+///     "shouldRollback": 0
+///   }
 /// }
 /// ```
-/// The parser walks `regions[].users[]` and flatMaps into `[PingOneMfaAccount]`.
+/// The parser iterates the top-level keys as region names, walks `users[]`, and
+/// flatMaps into `[PingOneMfaAccount]`.
 /// Missing or malformed keys are silently skipped — the parser is best-effort and never throws.
 internal struct AccountParser {
 
@@ -42,23 +40,20 @@ internal struct AccountParser {
     /// - Parameter deviceInfo: The raw dictionary returned by `PingOne.getInfo`. May be `nil`.
     /// - Returns: An array of parsed accounts (empty if `deviceInfo` is `nil`, empty, or malformed).
     internal static func parse(_ deviceInfo: [String: Any]?) -> [PingOneMfaAccount] {
-        guard let deviceInfo = deviceInfo,
-              let regions = deviceInfo["regions"] as? [[String: Any]] else {
-            return []
-        }
+        guard let deviceInfo = deviceInfo else { return [] }
 
-        return regions.flatMap { regionDict -> [PingOneMfaAccount] in
-            let regionName = regionDict["region"] as? String ?? ""
-            guard let users = regionDict["users"] as? [[String: Any]] else {
+        return deviceInfo.flatMap { (regionName, regionValue) -> [PingOneMfaAccount] in
+            guard let regionDict = regionValue as? [String: Any],
+                  let users = regionDict["users"] as? [[String: Any]] else {
                 return []
             }
             return users.compactMap { userDict -> PingOneMfaAccount? in
                 guard
                     let id = userDict["id"] as? String,
-                    let deviceId = userDict["deviceId"] as? String,
-                    let environment = userDict["environment"] as? String,
-                    let name = userDict["name"] as? String,
-                    let family = userDict["family"] as? String
+                    let deviceDict = userDict["device"] as? [String: Any],
+                    let deviceId = deviceDict["id"] as? String,
+                    let environmentDict = userDict["environment"] as? [String: Any],
+                    let environmentId = environmentDict["id"] as? String
                 else {
                     return nil
                 }
@@ -66,9 +61,7 @@ internal struct AccountParser {
                     region: regionName,
                     id: id,
                     deviceId: deviceId,
-                    environment: environment,
-                    name: name,
-                    family: family
+                    environmentId: environmentId
                 )
             }
         }

@@ -144,9 +144,7 @@ final class PingOneMFATests: XCTestCase {
             region: "NorthAmerica",
             id: "user-id-1",
             deviceId: "device-id-1",
-            environment: "env-id-1",
-            name: "Test User",
-            family: "PING_ID"
+            environmentId: "env-id-1"
         )
         MockPingOneMFA.accountsReturnValue = [expectedAccount]
 
@@ -339,25 +337,19 @@ final class PingOneMFATests: XCTestCase {
             region: "NorthAmerica",
             id: "user-1",
             deviceId: "device-1",
-            environment: "env-1",
-            name: "Alice",
-            family: "PING_ID"
+            environmentId: "env-1"
         )
         let b = PingOneMfaAccount(
             region: "NorthAmerica",
             id: "user-1",
             deviceId: "device-1",
-            environment: "env-1",
-            name: "Alice",
-            family: "PING_ID"
+            environmentId: "env-1"
         )
         let c = PingOneMfaAccount(
             region: "Europe",
             id: "user-2",
             deviceId: "device-2",
-            environment: "env-2",
-            name: "Bob",
-            family: "PING_ID"
+            environmentId: "env-2"
         )
 
         // Two instances with the same values are equal

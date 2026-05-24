@@ -316,7 +316,7 @@ class ConfigurationManager: ObservableObject {
         // Setting `isPingOneMFAInitialized` only on `true` prevents the flag from
         // being set prematurely while another caller is still running the factory.
         let didInitialize = try await initActor.initializePingOneMFA {
-            PingOneMFA.config { $0.geo = .northAmerica }
+            await PingOneMFA.config { $0.geo = .northAmerica }
             try await PingOneMFA.initialize()
         }
         if didInitialize {

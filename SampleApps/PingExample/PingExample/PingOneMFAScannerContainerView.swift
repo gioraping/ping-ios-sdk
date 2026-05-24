@@ -20,6 +20,8 @@ struct PingOneMFAScannerContainerView: View {
     @State private var showAlert = false
     @State private var alertTitle = ""
     @State private var alertMessage = ""
+    @State private var manualKey = ""
+    @FocusState private var isTextFieldFocused: Bool
 
     var body: some View {
         ZStack {
@@ -29,6 +31,33 @@ struct PingOneMFAScannerContainerView: View {
             VStack {
                 Spacer()
 
+                // Manual pairing key entry
+                VStack(spacing: 12) {
+                    TextField("Enter pairing key manually", text: $manualKey)
+                        .textFieldStyle(.roundedBorder)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
+                        .focused($isTextFieldFocused)
+
+                    Button {
+                        let key = manualKey.trimmingCharacters(in: .whitespaces)
+                        guard !key.isEmpty else { return }
+                        isTextFieldFocused = false
+                        Task { await viewModel.handleScannedCode(key) }
+                    } label: {
+                        Text("Pair")
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(manualKey.trimmingCharacters(in: .whitespaces).isEmpty || viewModel.isLoading)
+                }
+                .padding()
+                .background(.regularMaterial)
+                .cornerRadius(12)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 30)
+
                 if viewModel.isLoading {
                     ProgressView()
                         .scaleEffect(2.0)
@@ -36,7 +65,7 @@ struct PingOneMFAScannerContainerView: View {
                         .padding()
                         .background(Color.black.opacity(0.7))
                         .cornerRadius(12)
-                        .padding(.bottom, 50)
+                        .padding(.bottom, 16)
                 }
             }
         }
@@ -69,6 +98,9 @@ struct PingOneMFAScannerContainerView: View {
                 alertMessage = success
                 showAlert = true
             }
+        }
+        .onChange(of: viewModel.registrationSuccess) { success in
+            if success { manualKey = "" }
         }
     }
 }
