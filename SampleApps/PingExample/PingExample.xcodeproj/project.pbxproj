@@ -180,6 +180,14 @@
 		ECF7EB862E464EDD002A5E8E /* IdpCallbackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECF7EB852E464ED8002A5E8E /* IdpCallbackView.swift */; };
 		ECF7EB882E464F31002A5E8E /* SelectIdpCallbackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ECF7EB872E464F2C002A5E8E /* SelectIdpCallbackView.swift */; };
 		FAE66EFD02A8526178953F13 /* AuthMigrationViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BE27407BC6A20DE66B3B585 /* AuthMigrationViewModel.swift */; };
+		3074472F832D46029B7AE6DB /* PingOneMFAScannerContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF0D8E9742614F118A97A517 /* PingOneMFAScannerContainerView.swift */; };
+		E53994EB73A94FEF922CA2F8 /* PingOneMFAScannerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB284B4547584EE8B336A683 /* PingOneMFAScannerViewModel.swift */; };
+		7A9BF49E00FF4A58BE05D5FC /* PingOneMFAAccountsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9BCBE4945371450488BD9A81 /* PingOneMFAAccountsView.swift */; };
+		ED77D23063D546D98A95B48F /* PingOneMFAAccountsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1B50FB61D3934BE18ECD79BB /* PingOneMFAAccountsViewModel.swift */; };
+		9F34A9E1A2B8403B9AE1A4AA /* PingOneMFAOtpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E29A730854404FF9B3D4F464 /* PingOneMFAOtpView.swift */; };
+		16BDC26EB2374FB3A95DBB76 /* PingOneMFAOtpViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9B7EC470BB8432687F1F9B3 /* PingOneMFAOtpViewModel.swift */; };
+		120E5437B27D472BB79C67F6 /* PingOneMFAPayloadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75CB5955575F41E2958DDBFF /* PingOneMFAPayloadView.swift */; };
+		01852DC5DF3248029AA327B0 /* PingOneMFAPayloadViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E55D3866D734C13A50F7571 /* PingOneMFAPayloadViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -799,6 +807,14 @@
 		ECE2B8722DB7DBE500E2C51E /* PhoneNumberView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneNumberView.swift; sourceTree = "<group>"; };
 		ECF7EB852E464ED8002A5E8E /* IdpCallbackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IdpCallbackView.swift; sourceTree = "<group>"; };
 		ECF7EB872E464F2C002A5E8E /* SelectIdpCallbackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectIdpCallbackView.swift; sourceTree = "<group>"; };
+		FF0D8E9742614F118A97A517 /* PingOneMFAScannerContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PingOneMFAScannerContainerView.swift; sourceTree = "<group>"; };
+		BB284B4547584EE8B336A683 /* PingOneMFAScannerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PingOneMFAScannerViewModel.swift; sourceTree = "<group>"; };
+		9BCBE4945371450488BD9A81 /* PingOneMFAAccountsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PingOneMFAAccountsView.swift; sourceTree = "<group>"; };
+		1B50FB61D3934BE18ECD79BB /* PingOneMFAAccountsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PingOneMFAAccountsViewModel.swift; sourceTree = "<group>"; };
+		E29A730854404FF9B3D4F464 /* PingOneMFAOtpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PingOneMFAOtpView.swift; sourceTree = "<group>"; };
+		F9B7EC470BB8432687F1F9B3 /* PingOneMFAOtpViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PingOneMFAOtpViewModel.swift; sourceTree = "<group>"; };
+		75CB5955575F41E2958DDBFF /* PingOneMFAPayloadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PingOneMFAPayloadView.swift; sourceTree = "<group>"; };
+		3E55D3866D734C13A50F7571 /* PingOneMFAPayloadViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PingOneMFAPayloadViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -1025,6 +1041,14 @@
 				1B7A9C832EE7BD2A00989A55 /* QRScannerView.swift */,
 				1B7A9C842EE7BD2A00989A55 /* QRScannerViewModel.swift */,
 				1B18D6402EECC30F0004F205 /* JsonExportView.swift */,
+				FF0D8E9742614F118A97A517 /* PingOneMFAScannerContainerView.swift */,
+				BB284B4547584EE8B336A683 /* PingOneMFAScannerViewModel.swift */,
+				9BCBE4945371450488BD9A81 /* PingOneMFAAccountsView.swift */,
+				1B50FB61D3934BE18ECD79BB /* PingOneMFAAccountsViewModel.swift */,
+				E29A730854404FF9B3D4F464 /* PingOneMFAOtpView.swift */,
+				F9B7EC470BB8432687F1F9B3 /* PingOneMFAOtpViewModel.swift */,
+				75CB5955575F41E2958DDBFF /* PingOneMFAPayloadView.swift */,
+				3E55D3866D734C13A50F7571 /* PingOneMFAPayloadViewModel.swift */,
 				3A5441342BCDF10B00385131 /* Assets.xcassets */,
 				3A5441362BCDF10B00385131 /* Preview Content */,
 			);
@@ -2113,6 +2137,14 @@
 				3A3709962BEB038200AA7B51 /* AccessTokenView.swift in Sources */,
 				A5E9AEDB2D30A020000533ED /* LabelView.swift in Sources */,
 				A5D296932E7B37DB0093A761 /* DeviceProfileCallbackView.swift in Sources */,
+				3074472F832D46029B7AE6DB /* PingOneMFAScannerContainerView.swift in Sources */,
+				E53994EB73A94FEF922CA2F8 /* PingOneMFAScannerViewModel.swift in Sources */,
+				7A9BF49E00FF4A58BE05D5FC /* PingOneMFAAccountsView.swift in Sources */,
+				ED77D23063D546D98A95B48F /* PingOneMFAAccountsViewModel.swift in Sources */,
+				9F34A9E1A2B8403B9AE1A4AA /* PingOneMFAOtpView.swift in Sources */,
+				16BDC26EB2374FB3A95DBB76 /* PingOneMFAOtpViewModel.swift in Sources */,
+				120E5437B27D472BB79C67F6 /* PingOneMFAPayloadView.swift in Sources */,
+				01852DC5DF3248029AA327B0 /* PingOneMFAPayloadViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
