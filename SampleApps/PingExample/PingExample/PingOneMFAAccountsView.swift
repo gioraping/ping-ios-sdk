@@ -19,6 +19,9 @@ struct PingOneMFAAccountsView: View {
 
     var body: some View {
         ZStack {
+            Color(.systemGroupedBackground)
+                .ignoresSafeArea()
+
             ScrollView {
                 VStack(spacing: 20) {
                     if viewModel.isLoading && viewModel.accounts.isEmpty {
@@ -31,18 +34,20 @@ struct PingOneMFAAccountsView: View {
                         accountsList
                     }
                 }
+                .frame(maxWidth: .infinity)
                 .padding(.horizontal, 20)
                 .padding(.top, 20)
                 .padding(.bottom, 30)
             }
-            .background(Color(.systemGroupedBackground))
 
             if viewModel.isLoading && !viewModel.accounts.isEmpty {
-                Color.black.opacity(0.4)
-                    .ignoresSafeArea()
-                ProgressView()
-                    .scaleEffect(2.0)
-                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                ZStack {
+                    Color.black.opacity(0.4)
+                        .ignoresSafeArea()
+                    ProgressView()
+                        .scaleEffect(2.0)
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                }
             }
         }
         .navigationTitle("MFA Accounts")
@@ -135,14 +140,10 @@ private struct PingOneMFAAccountCardView: View {
                     Text(account.id)
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.primary)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
 
                     Text("Env: \(account.environmentId)")
                         .font(.system(size: 12))
                         .foregroundColor(.secondary)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
 
                     Text(account.region)
                         .font(.system(size: 11))
