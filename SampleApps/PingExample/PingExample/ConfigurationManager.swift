@@ -310,11 +310,6 @@ class ConfigurationManager: ObservableObject {
 
     /// Initialize the PingOne MFA SDK
     public func initializePingOneMFAClient() async throws {
-        // `initializePingOneMFA` returns `true` only when the factory was actually
-        // executed (first caller wins). When a concurrent call returns early because
-        // initialization is already in progress or complete, it returns `false`.
-        // Setting `isPingOneMFAInitialized` only on `true` prevents the flag from
-        // being set prematurely while another caller is still running the factory.
         let didInitialize = try await initActor.initializePingOneMFA {
             await PingOneMFA.config { $0.geo = .northAmerica }
             try await PingOneMFA.initialize()
@@ -357,9 +352,6 @@ private actor ClientInitializationActor {
         return client
     }
 
-    /// Runs `factory` exactly once. Returns `true` when the factory was executed
-    /// (this call won the initialization race), `false` when a concurrent or previous
-    /// call already handled initialization (early-return path).
     func initializePingOneMFA(factory: @Sendable () async throws -> Void) async throws -> Bool {
         guard !pingOneMFAInitialized && !isPingOneMFAInitializing else { return false }
 

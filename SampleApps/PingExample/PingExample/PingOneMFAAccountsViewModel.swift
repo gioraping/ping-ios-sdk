@@ -20,9 +20,6 @@ class PingOneMFAAccountsViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
-    /// Initializes the PingOne MFA SDK if it has not already been initialized.
-    /// This is a true no-op — zero state mutation, no async suspension — when the SDK
-    /// is already initialized, mirroring the `oathClient == nil` guard in `OathAccountsViewModel`.
     func initialize() async {
         guard !ConfigurationManager.shared.isPingOneMFAInitialized else { return }
 
@@ -35,12 +32,6 @@ class PingOneMFAAccountsViewModel: ObservableObject {
         isLoading = false
     }
 
-    /// Loads the list of paired MFA accounts from the SDK.
-    /// Guards on initialization state, mirroring the `oathClient == nil` guard in
-    /// `OathAccountsViewModel.loadAccounts()`. If the SDK was never successfully
-    /// initialized (e.g. `initialize()` threw), this returns silently rather than
-    /// overwriting the initialization error with a less informative "Failed to load
-    /// accounts" message.
     func loadAccounts() async {
         guard ConfigurationManager.shared.isPingOneMFAInitialized else {
             // SDK not initialized — silently return so the initialization error

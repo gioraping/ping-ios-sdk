@@ -11,10 +11,6 @@
 import SwiftUI
 import PingOneMFA
 
-/// View that displays the current PingOne MFA one-time passcode with a live countdown.
-/// The passcode is refreshed automatically when it expires.
-/// Note: `PingOneMFA.collectOtp()` takes no account selector — if multiple accounts are
-/// paired, the code returned corresponds to the first account in the SDK's list.
 struct PingOneMFAOtpView: View {
     @Binding var path: [MenuItem]
     @StateObject private var viewModel = PingOneMFAOtpViewModel()
@@ -31,7 +27,6 @@ struct PingOneMFAOtpView: View {
                 ScrollView {
                     VStack(spacing: 32) {
                         otpCard
-                        subtitleNote
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 40)
@@ -107,20 +102,5 @@ struct PingOneMFAOtpView: View {
         .background(Color(.secondarySystemGroupedBackground))
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.05), radius: 6, x: 0, y: 3)
-    }
-
-    // MARK: - Subtitle Note
-
-    private var subtitleNote: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "info.circle")
-                .font(.system(size: 13))
-                .foregroundColor(.secondary)
-            Text("OTP for your paired account. If multiple accounts are paired, the code shown corresponds to the first account.")
-                .font(.system(size: 12))
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.leading)
-        }
-        .padding(.horizontal, 4)
     }
 }

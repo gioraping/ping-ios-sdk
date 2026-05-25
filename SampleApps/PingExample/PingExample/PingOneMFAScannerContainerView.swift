@@ -10,9 +10,7 @@
 
 import SwiftUI
 
-/// Container view for PingOne MFA QR Scanner functionality.
-/// Reuses the existing `QRScannerView` AVFoundation component with a dedicated
-/// `PingOneMFAScannerDelegate` that dispatches to `PingOneMFAScannerViewModel`.
+
 struct PingOneMFAScannerContainerView: View {
     @Binding var path: [MenuItem]
     @StateObject private var viewModel = PingOneMFAScannerViewModel()

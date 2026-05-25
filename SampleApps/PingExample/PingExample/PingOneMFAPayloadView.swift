@@ -12,9 +12,6 @@ import SwiftUI
 import UIKit
 import PingOneMFA
 
-/// View that displays the raw mobile payload string returned by `PingOneMFA.collectMobilePayload()`.
-/// The payload is shown as selectable, plain text in a scroll view. A "Copy" button writes
-/// the payload to the system clipboard.
 struct PingOneMFAPayloadView: View {
     @Binding var path: [MenuItem]
     @StateObject private var viewModel = PingOneMFAPayloadViewModel()
